@@ -1,0 +1,37 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql_instance
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  liquibase:
+    image: liquibase/liquibase
+    container_name: liquibase_instance
+    depends_on:
+      - mysql
+    volumes:
+      - ./changelogs:/liquibase/changelog
+    entrypoint: >
+      /bin/sh -c '
+      wget https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/8.0.32/mysql-connector-j-8.0.32.jar -P /liquibase/drivers/ &&
+      ls -la /liquibase/changelog/ &&
+      /liquibase/docker-entrypoint.sh
+      --url=jdbc:mysql://mysql:3306/${MYSQL_DATABASE}
+      --username=${MYSQL_USER}
+      --password=${MYSQL_PASSWORD}
+      --driver=com.mysql.cj.jdbc.Driver
+      --classpath=/liquibase/drivers/mysql-connector-j-8.0.32.jar
+      --changeLogFile=/changelog/db-changelog.xml
+      update
+      '
+      
+volumes:
+  mysql_data:

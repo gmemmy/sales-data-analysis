@@ -1,7 +1,9 @@
 from sqlalchemy import create_engine, Column, Integer, String, Float, Date
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker
+from dotenv import load_dotenv
 import datetime
+import os
 
 Base = declarative_base()
 
@@ -13,7 +15,17 @@ class Sale(Base):
     region = Column(String(50))
     amount = Column(Float)
 
-engine = create_engine('sqlite:///sales.db', echo=True)
+load_dotenv()
+
+# get database credentials from environment variables
+user = os.getenv("DB_USER", "user")
+password = os.getenv("MYSQL_PASSWORD", "userpassword")
+host = os.getenv("MYSQL_HOST", "localhost")
+port = os.getenv("MYSQL_PORT", "3306")
+database = os.getenv("MYSQL_DATABASE", "sales")
+
+connection_string = f'mysql+pymysql://{user}:{password}@{host}:{port}/{database}'
+engine = create_engine(connection_string, echo=True)
 
 Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
@@ -30,5 +42,4 @@ if session.query(Sale).count() == 0:
     ]
     session.add_all(sample_sales)
     session.commit()
-    
     
