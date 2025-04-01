@@ -1,11 +1,24 @@
+import os
 import pandas as pd
 from sqlalchemy import create_engine
+from dotenv import load_dotenv
 
 def load_sales_data():
-    # connect to the SQLite database 'sales.db'
-    engine = create_engine('sqlite:///sales.db')
-    query = "SELECT * FROM sales"
+    load_dotenv()
 
+    # get database credentials from environment variables
+    user = os.getenv("MYSQL_USER", "user")
+    password = os.getenv("MYSQL_PASSWORD", "userpassword")
+    host = os.getenv("MYSQL_HOST", "localhost")
+    port = os.getenv("MYSQL_PORT", "3306")
+    database = os.getenv("MYSQL_DATABASE", "sales")
+    
+    # connect to the MySQL database
+    connection_string = f'mysql+pymysql://{user}:{password}@{host}:{port}/{database}'
+    engine = create_engine(connection_string)
+
+
+    query = "SELECT * FROM sales"
     # use pandas to execute the SQL query and return the data as a DataFrame
     df = pd.read_sql_query(query, engine)
     return df
